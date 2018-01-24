@@ -1,10 +1,17 @@
 """
-Simple TensorFlow exercises
-You should thoroughly test your code
+Simple exercises to get used to TensorFlow API
+You should thoroughly test your code.
+TensorFlow's official documentation should be your best friend here
+CS20: "TensorFlow for Deep Learning Research"
+cs20.stanford.edu
+Created by Chip Huyen (chiphuyen@cs.stanford.edu)
 """
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 
 import tensorflow as tf
 
+sess = tf.InteractiveSession()
 ###############################################################################
 # 1a: Create two random 0-d tensors x and y of any distribution.
 # Create a TensorFlow object that returns x + y if x > y, and x - y otherwise.
@@ -14,7 +21,8 @@ import tensorflow as tf
 
 x = tf.random_uniform([])  # Empty array as shape creates a scalar.
 y = tf.random_uniform([])
-out = tf.cond(tf.greater(x, y), lambda: tf.add(x, y), lambda: tf.subtract(x, y))
+out = tf.cond(tf.greater(x, y), lambda: x + y, lambda: x - y)
+print(sess.run(out))
 
 ###############################################################################
 # 1b: Create two 0-d tensors x and y randomly selected from the range [-1, 1).
