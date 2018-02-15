@@ -19,6 +19,7 @@ VGG_DOWNLOAD_LINK = 'http://www.vlfeat.org/matconvnet/models/imagenet-vgg-veryde
 VGG_FILENAME = 'imagenet-vgg-verydeep-19.mat'
 EXPECTED_BYTES = 534904783
 
+
 class VGG(object):
     def __init__(self, input_img):
         utils.download(VGG_DOWNLOAD_LINK, VGG_FILENAME, EXPECTED_BYTES)

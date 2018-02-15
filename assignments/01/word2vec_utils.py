@@ -3,14 +3,14 @@ import random
 import os
 import sys
 
+import utils
+
 sys.path.append('..')
 import zipfile
 
 import numpy as np
 from six.moves import urllib
 import tensorflow as tf
-
-import utils
 
 
 def read_data(file_path):
@@ -49,21 +49,12 @@ def convert_words_to_index(words, dictionary):
     return [dictionary[word] if word in dictionary else 0 for word in words]
 
 
-def generate_sample(index_words, context_window_size):
-    """ Form training pairs according to the skip-gram model. """
-    print('index_words: {}'.format(index_words))
-    for index, center in enumerate(index_words):
-        print('index = {}, center = {}'.format(index, center))
-        context = random.randint(1, context_window_size)
-        print('context = {}'.format(context))
-        # get a random target before the center word
-        for target in index_words[max(0, index - context): index]:
-            print('before: center = {}, target = {}'.format(center, target))
-            yield center, target
-        # get a random target after the center wrod
-        for target in index_words[index + 1: index + context + 1]:
-            print('after: center = {}, target = {}'.format(center, target))
-            yield center, target
+def generate_around_words(index_words, context_window_size):
+    for index, center in enumerate(index_words[context_window_size: -context_window_size], start=context_window_size):
+        context_words = index_words[index - context_window_size: index] + \
+                        index_words[index + 1: index + context_window_size + 1]
+        # assert len(context_words) == 2 * context_window_size
+        yield (context_words, center)
 
 
 def most_common_words(visual_fld, num_visualize):
@@ -80,20 +71,17 @@ def most_common_words(visual_fld, num_visualize):
 
 def batch_gen(download_url, expected_byte, vocab_size, batch_size,
               skip_window, visual_fld):
-    local_dest = 'data/text8.zip'
+    local_dest = '../../examples/data/text8.zip'
     utils.download_one_file(download_url, local_dest, expected_byte)
     words = read_data(local_dest)
-    print(words)
     dictionary, _ = build_vocab(words, vocab_size, visual_fld)
-    print(dictionary)
     index_words = convert_words_to_index(words, dictionary)
     del words  # to save memory
-    single_gen = generate_sample(index_words, skip_window)
+    single_gen = generate_around_words(index_words, skip_window)
 
     while True:
-        center_batch = np.zeros(batch_size, dtype=np.int32)
-        target_batch = np.zeros([batch_size, 1])
+        around_batch = np.zeros([batch_size, 2 * skip_window], dtype=np.int32)
+        center_batch = np.zeros([batch_size, 1])
         for index in range(batch_size):
-            print('Index (in batch_gen): {}'.format(index))
-            center_batch[index], target_batch[index] = next(single_gen)
-        yield center_batch, target_batch
+            around_batch[index], center_batch[index] = next(single_gen)
+        yield around_batch, center_batch
